@@ -1,0 +1,28 @@
+# Athar أثر
+
+A new Flutter project.
+
+## Getting Started
+
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
+
+## Screenshots
+
+Render every screen (splash, quiz, plan, sign-up, home, stats, coach, profile)
+on a small and a large phone:
+
+```
+flutter test --update-goldens test_screenshots
+```
+
+PNGs are written to `screenshots/small_phone/` and `screenshots/large_phone/`.
+Long screens also get a `_full` image showing the whole page.
