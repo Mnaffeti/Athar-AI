@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/groq_coach.dart';
 import '../../theme/app_theme.dart';
 
 class _Message {
@@ -9,7 +10,7 @@ class _Message {
   final bool fromUser;
 }
 
-/// AI coach chat. Replies are canned for now; swap [_reply] for a real API call.
+/// AI coach chat. Uses Groq when GROQ_API_KEY is set, otherwise canned replies.
 class CoachScreen extends StatefulWidget {
   const CoachScreen({super.key, required this.name});
 
@@ -77,10 +78,25 @@ class _CoachScreenState extends State<CoachScreen> {
       _typing = true;
     });
     _scrollToBottom();
-    await Future.delayed(const Duration(milliseconds: 1100));
+    String reply;
+    if (GroqCoach.isConfigured) {
+      try {
+        reply = await GroqCoach.reply(
+          name: widget.name,
+          history: [for (final m in _messages) (m.text, m.fromUser)],
+        );
+      } catch (e) {
+        debugPrint('Coach request failed: $e');
+        reply = "I couldn't reach the coach right now. Check your connection "
+            'and try again.';
+      }
+    } else {
+      await Future.delayed(const Duration(milliseconds: 1100));
+      reply = _reply(trimmed);
+    }
     if (!mounted) return;
     setState(() {
-      _messages.add(_Message(_reply(trimmed), fromUser: false));
+      _messages.add(_Message(reply, fromUser: false));
       _typing = false;
     });
     _scrollToBottom();

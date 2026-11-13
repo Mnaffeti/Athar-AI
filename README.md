@@ -1,19 +1,48 @@
 # Athar أثر
 
-A new Flutter project.
+A Flutter habit app that helps you cut screen time, with an AI coach powered
+by [Groq](https://groq.com).
 
-## Getting Started
+## Running the app
 
-This project is a starting point for a Flutter application.
+Requires the [Flutter SDK](https://docs.flutter.dev/get-started/install).
 
-A few resources to get you started if this is your first Flutter project:
+```
+flutter pub get
+flutter run --dart-define-from-file=env.json
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+In VS Code, just press F5: the **Athar** launch config in `.vscode/launch.json`
+already passes `env.json`.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Without `env.json` (plain `flutter run`) the app still works, but the coach
+falls back to canned offline replies.
+
+## Groq API key (AI coach)
+
+1. Create a free key at <https://console.groq.com/keys>.
+2. Copy the example file and paste your key:
+
+   ```
+   cp env.example.json env.json
+   ```
+
+   ```json
+   {
+     "GROQ_API_KEY": "gsk_..."
+   }
+   ```
+
+3. Run with `--dart-define-from-file=env.json` (see above). The key is baked in
+   at build time, so restart the app (not hot reload) after changing it.
+
+`env.json` is gitignored. Never commit your key.
+
+Optional: add `"GROQ_MODEL"` to `env.json` to override the default model
+(`openai/gpt-oss-120b`).
+
+> Note: keys passed this way are embedded in the built app. Fine for local
+> development; for a public release, proxy requests through a backend instead.
 
 ## Screenshots
 
