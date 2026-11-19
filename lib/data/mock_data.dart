@@ -32,6 +32,20 @@ class Metric {
 
   double get weekTotal => week.fold(0, (a, b) => a + b);
 
+  Metric copyWith({double? today, List<double>? week}) {
+    return Metric(
+      id: id,
+      label: label,
+      unit: unit,
+      icon: icon,
+      color: color,
+      today: today ?? this.today,
+      goal: goal,
+      week: week ?? this.week,
+      lowerIsBetter: lowerIsBetter,
+    );
+  }
+
   /// Change vs yesterday as a fraction (e.g. -0.12 = 12% less).
   double get deltaVsYesterday {
     final yesterday = week[week.length - 2];

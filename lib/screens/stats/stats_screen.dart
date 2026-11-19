@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../data/mock_data.dart';
+import '../../models/daily_tracking.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bar_chart.dart';
 import '../../widgets/stat_card.dart';
 
 class StatsScreen extends StatefulWidget {
-  const StatsScreen({super.key});
+  const StatsScreen({super.key, required this.tracking});
+  final DailyTracking tracking;
 
   @override
   State<StatsScreen> createState() => _StatsScreenState();
@@ -15,9 +17,27 @@ class StatsScreen extends StatefulWidget {
 class _StatsScreenState extends State<StatsScreen> {
   Metric _selected = MockData.screenTime;
 
+  Metric _todayMetric(Metric demo, double today) {
+    final week = List<double>.of(demo.week);
+    week[week.length - 1] = today;
+    return demo.copyWith(today: today, week: week);
+  }
+
+  List<Metric> get _metrics => [
+    _todayMetric(MockData.screenTime, widget.tracking.screenHours),
+    _todayMetric(MockData.scroll, widget.tracking.scrollMinutes),
+    _todayMetric(MockData.socialMedia, widget.tracking.socialHours),
+    _todayMetric(MockData.gym, widget.tracking.gymHours),
+    _todayMetric(MockData.phoneFree, widget.tracking.phoneFreeHours),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final m = _selected;
+    final metrics = _metrics;
+    final m = metrics.firstWhere(
+      (metric) => metric.id == _selected.id,
+      orElse: () => metrics.first,
+    );
     return SafeArea(
       bottom: false,
       child: ListView(
@@ -37,10 +57,10 @@ class _StatsScreenState extends State<StatsScreen> {
             height: 40,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: MockData.all.length,
+              itemCount: metrics.length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
-                final metric = MockData.all[i];
+                final metric = metrics[i];
                 final selected = metric.id == m.id;
                 return ChoiceChip(
                   label: Text(metric.label),

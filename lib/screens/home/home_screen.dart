@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/mock_data.dart';
+import '../../models/daily_tracking.dart';
 import '../../models/onboarding_answers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/profile_avatar.dart';
@@ -11,11 +12,13 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
     required this.profile,
+    required this.tracking,
     required this.onOpenStats,
     required this.onOpenProfile,
   });
 
   final OnboardingAnswers profile;
+  final DailyTracking tracking;
   final VoidCallback onOpenStats;
   final VoidCallback onOpenProfile;
 
@@ -28,29 +31,32 @@ class HomeScreen extends StatelessWidget {
         children: [
           _Header(profile: profile, onOpenProfile: onOpenProfile),
           const SizedBox(height: 24),
-          const _ScreenTimeHero(),
+          _ScreenTimeHero(tracking: tracking),
           const SizedBox(height: 14),
-          const _ScrollCard(),
+          _ScrollCard(tracking: tracking),
           const SizedBox(height: 14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: MetricTile(
-                  metric: MockData.socialMedia,
+                  metric: MockData.socialMedia.copyWith(today: tracking.socialHours),
                   onTap: onOpenStats,
                 ),
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: MetricTile(metric: MockData.gym, onTap: onOpenStats),
+                child: MetricTile(
+                  metric: MockData.gym.copyWith(today: tracking.gymHours),
+                  onTap: onOpenStats,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          const _TotalsRow(),
+          _TotalsRow(tracking: tracking),
           const SizedBox(height: 14),
-          const _PhoneFreeCard(),
+          _PhoneFreeCard(tracking: tracking),
         ],
       ),
     );
@@ -123,11 +129,12 @@ class _Header extends StatelessWidget {
 
 /// Big ring showing screen time vs. daily limit.
 class _ScreenTimeHero extends StatelessWidget {
-  const _ScreenTimeHero();
+  const _ScreenTimeHero({required this.tracking});
+  final DailyTracking tracking;
 
   @override
   Widget build(BuildContext context) {
-    const m = MockData.screenTime;
+    final m = MockData.screenTime.copyWith(today: tracking.screenHours);
     final remaining = m.goal - m.today;
     return AppCard(
       padding: const EdgeInsets.all(20),
@@ -184,7 +191,7 @@ class _ScreenTimeHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const DeltaChip(metric: m),
+                DeltaChip(metric: m),
                 const SizedBox(height: 6),
                 const Text(
                   'vs. yesterday',
@@ -200,15 +207,16 @@ class _ScreenTimeHero extends StatelessWidget {
 }
 
 class _ScrollCard extends StatelessWidget {
-  const _ScrollCard();
+  const _ScrollCard({required this.tracking});
+  final DailyTracking tracking;
 
   @override
   Widget build(BuildContext context) {
-    const m = MockData.scroll;
+    final m = MockData.scroll.copyWith(today: tracking.scrollMinutes);
     return AppCard(
       child: Row(
         children: [
-          const MetricIcon(metric: m, size: 48),
+          MetricIcon(metric: m, size: 48),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -236,7 +244,7 @@ class _ScrollCard extends StatelessWidget {
               ],
             ),
           ),
-          const DeltaChip(metric: m),
+          DeltaChip(metric: m),
         ],
       ),
     );
@@ -244,7 +252,8 @@ class _ScrollCard extends StatelessWidget {
 }
 
 class _TotalsRow extends StatelessWidget {
-  const _TotalsRow();
+  const _TotalsRow({required this.tracking});
+  final DailyTracking tracking;
 
   @override
   Widget build(BuildContext context) {
@@ -299,18 +308,19 @@ class _TotalsRow extends StatelessWidget {
 
 /// Phone-free progress + a button to start a focus session.
 class _PhoneFreeCard extends StatelessWidget {
-  const _PhoneFreeCard();
+  const _PhoneFreeCard({required this.tracking});
+  final DailyTracking tracking;
 
   @override
   Widget build(BuildContext context) {
-    const m = MockData.phoneFree;
+    final m = MockData.phoneFree.copyWith(today: tracking.phoneFreeHours);
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const MetricIcon(metric: m),
+              MetricIcon(metric: m),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
