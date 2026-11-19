@@ -41,6 +41,37 @@ falls back to canned offline replies.
 Optional: add `"GROQ_MODEL"` to `env.json` to override the default model
 (`openai/gpt-oss-120b`).
 
+## Daily device tracking API
+
+The **Track** tab collects screen time, scroll time, social-media time, gym time
+and phone-free time. Configure a tracking API with optional values in
+`env.json`:
+
+```json
+{
+  "TRACKING_API_URL": "https://your-api.example.com/tracking",
+  "TRACKING_API_KEY": ""
+}
+```
+
+The app sends `POST` requests to this URL with:
+
+```json
+{
+  "date": "2026-11-19",
+  "screen_hours": 3.4,
+  "scroll_minutes": 312,
+  "social_hours": 1.2,
+  "gym_hours": 1.25,
+  "phone_free_hours": 2.6
+}
+```
+
+It loads today's entry with `GET <TRACKING_API_URL>?date=YYYY-MM-DD`. The API
+may return the entry directly or inside `data`/`tracking`. If no tracking API
+is configured, the app keeps the demo values and saves locally for the current
+session.
+
 > Note: keys passed this way are embedded in the built app. Fine for local
 > development; for a public release, proxy requests through a backend instead.
 
