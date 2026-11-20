@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-import '../../services/groq_coach.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import '../../theme/app_theme.dart';
 
 class _Message {
@@ -10,7 +12,6 @@ class _Message {
   final bool fromUser;
 }
 
-/// AI coach chat. Uses Groq when GROQ_API_KEY is set, otherwise canned replies.
 class CoachScreen extends StatefulWidget {
   const CoachScreen({super.key, required this.name});
 
@@ -23,6 +24,7 @@ class CoachScreen extends StatefulWidget {
 class _CoachScreenState extends State<CoachScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+
   late final List<_Message> _messages = [
     _Message(
       "Hey ${widget.name} 👋 I'm your Athar coach. You're 12 days into your "
@@ -30,6 +32,7 @@ class _CoachScreenState extends State<CoachScreen> {
       fromUser: false,
     ),
   ];
+
   bool _typing = false;
 
   static const _suggestions = [
@@ -38,6 +41,9 @@ class _CoachScreenState extends State<CoachScreen> {
     'Plan a phone-free evening',
   ];
 
+  // La clé est transmise à la compilation via --dart-define-from-file=env.json.
+  static const _groqApiKey = String.fromEnvironment('GROQ_API_KEY');
+
   @override
   void dispose() {
     _controller.dispose();
@@ -45,66 +51,92 @@ class _CoachScreenState extends State<CoachScreen> {
     super.dispose();
   }
 
-  String _reply(String input) {
-    final q = input.toLowerCase();
-    if (q.contains('tiktok') ||
-        q.contains('instagram') ||
-        q.contains('scroll')) {
-      return 'Try this: move the app off your home screen and add a 10-second '
-          'pause before it opens. Most urges fade in under a minute. Want me to '
-          'set a 30-min daily limit?';
+  Future<String> _fetchGroqReply(String userPrompt) async {
+    if (_groqApiKey.isEmpty) {
+      return 'Erreur : GROQ_API_KEY est introuvable. '
+          'Vérifie le fichier env.json et les options de lancement.';
     }
-    if (q.contains('gym') || q.contains('workout')) {
-      return "You've hit the gym 5 times this week, 1h 15m today. That's 46 "
-          'hours total. Leave your phone in the locker next session and it counts '
-          'as phone-free time too 💪';
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_groqApiKey',
+        },
+        body: jsonEncode({
+          'model': 'qwen/qwen3.8-27b',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are Athar Coach, a friendly, concise productivity and '
+                  'wellness AI coach helping the user reduce screen time, avoid '
+                  'mindless scrolling, and stay motivated for the gym.',
+            },
+            {
+              'role': 'user',
+              'content': userPrompt,
+            },
+          ],
+          'temperature': 0.7,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint(
+          'Groq API error ${response.statusCode}: ${response.body}',
+        );
+        return 'Le coach ne peut pas répondre pour le moment. '
+            'Réessaie dans quelques instants.';
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final choices = data['choices'] as List<dynamic>;
+      final firstChoice = choices.first as Map<String, dynamic>;
+      final message = firstChoice['message'] as Map<String, dynamic>;
+      final content = message['content'] as String?;
+
+      if (content == null || content.trim().isEmpty) {
+        return 'Je n’ai pas reçu de réponse. Essaie à nouveau.';
+      }
+
+      return content.trim();
+    } catch (e) {
+      debugPrint('Groq request failed: $e');
+      return 'Erreur de connexion. Vérifie ta connexion et réessaie.';
     }
-    if (q.contains('evening') ||
-        q.contains('phone-free') ||
-        q.contains('sleep')) {
-      return 'Plan: 9 PM phone goes on the charger outside your room. 9–10 PM: '
-          'read, stretch or cook. That alone adds about 7 phone-free hours a week.';
-    }
-    return "Got it. Small wins matter: what's one thing you'd rather be doing "
-        'right now instead of being on your phone?';
   }
 
   Future<void> _send(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty || _typing) return;
+
     _controller.clear();
+
     setState(() {
       _messages.add(_Message(trimmed, fromUser: true));
       _typing = true;
     });
+
     _scrollToBottom();
-    String reply;
-    if (GroqCoach.isConfigured) {
-      try {
-        reply = await GroqCoach.reply(
-          name: widget.name,
-          history: [for (final m in _messages) (m.text, m.fromUser)],
-        );
-      } catch (e) {
-        debugPrint('Coach request failed: $e');
-        reply = "I couldn't reach the coach right now. Check your connection "
-            'and try again.';
-      }
-    } else {
-      await Future.delayed(const Duration(milliseconds: 1100));
-      reply = _reply(trimmed);
-    }
+
+    final reply = await _fetchGroqReply(trimmed);
+
     if (!mounted) return;
+
     setState(() {
       _messages.add(_Message(reply, fromUser: false));
       _typing = false;
     });
+
     _scrollToBottom();
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
+
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 250),
@@ -158,7 +190,9 @@ class _CoachScreenState extends State<CoachScreen> {
               padding: const EdgeInsets.all(16),
               itemCount: _messages.length + (_typing ? 1 : 0),
               itemBuilder: (context, i) {
-                if (i == _messages.length) return const _Bubble.typing();
+                if (i == _messages.length) {
+                  return const _Bubble.typing();
+                }
                 return _Bubble(message: _messages[i]);
               },
             ),
@@ -220,8 +254,11 @@ class _CoachScreenState extends State<CoachScreen> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required _Message this.message}) : typing = false;
-  const _Bubble.typing() : message = null, typing = true;
+  const _Bubble({required this.message}) : typing = false;
+
+  const _Bubble.typing()
+      : message = null,
+        typing = true;
 
   final _Message? message;
   final bool typing;
@@ -229,6 +266,7 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fromUser = message?.fromUser ?? false;
+
     return Align(
       alignment: fromUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
