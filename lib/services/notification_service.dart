@@ -1,5 +1,5 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -29,8 +29,20 @@ class NotificationService {
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
+    const windows = WindowsInitializationSettings(
+      appName: 'Athar AI',
+      appUserModelId: 'com.athar.ai',
+      // Remplacez par un vrai GUID unique v4 pour votre application
+      guid: '8f4c2b10-6e3a-4d9b-9c1f-2a7e5b0d4c8e',
+    );
+
     await _notifications.initialize(
-      settings: const InitializationSettings(android: android, iOS: darwin),
+      settings: const InitializationSettings(
+        android: android,
+        iOS: darwin,
+        macOS: darwin,
+        windows: windows,
+      ),
     );
   }
 
@@ -56,6 +68,7 @@ class NotificationService {
           ) ??
           false;
     }
+
     return true;
   }
 
@@ -104,6 +117,8 @@ class NotificationService {
           priority: Priority.high,
         ),
         iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+        windows: WindowsNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -153,6 +168,8 @@ class NotificationService {
           priority: Priority.high,
         ),
         iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+        windows: WindowsNotificationDetails(),
       ),
     );
   }
