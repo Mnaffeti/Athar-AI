@@ -4,9 +4,12 @@ import '../../data/mock_data.dart';
 import '../../models/daily_tracking.dart';
 import '../../models/onboarding_answers.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/profile_avatar.dart';
-import '../../widgets/progress_ring.dart';
-import '../../widgets/stat_card.dart';
+import '../../atoms/app_card.dart';
+import '../../atoms/delta_chip.dart';
+import '../../atoms/metric_icon.dart';
+import '../../atoms/profile_avatar.dart';
+import '../../atoms/progress_ring.dart';
+import '../../components/metric_tile.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/onboarding_answers.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/option_tile.dart';
 import 'plan_screen.dart';
+import '../../components/option_tile.dart';
 
 /// Multi-step onboarding questionnaire, one question per page.
 class QuizScreen extends StatefulWidget {

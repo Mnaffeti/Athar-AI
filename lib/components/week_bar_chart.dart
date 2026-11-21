@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../data/mock_data.dart';
 import '../theme/app_theme.dart';
 

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/daily_tracking.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/stat_card.dart';
 import '../../services/notification_service.dart';
+import '../../atoms/app_card.dart';
 
 class TrackingScreen extends StatefulWidget {
   const TrackingScreen({

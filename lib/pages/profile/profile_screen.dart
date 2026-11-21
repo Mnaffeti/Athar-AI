@@ -4,9 +4,9 @@ import '../../data/mock_data.dart';
 import '../../models/onboarding_answers.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/profile_avatar.dart';
-import '../../widgets/stat_card.dart';
 import '../onboarding/welcome_screen.dart';
+import '../../atoms/app_card.dart';
+import '../../atoms/profile_avatar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, required this.profile});

@@ -2,11 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:quit/main.dart';
 import 'package:quit/models/onboarding_answers.dart';
-import 'package:quit/screens/main_shell.dart';
-import 'package:quit/widgets/profile_avatar.dart';
+import 'package:quit/pages/main_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:quit/atoms/profile_avatar.dart';
 
 void main() {
   // Splash checks the session, so Supabase must exist (signed out, no network).

@@ -8,9 +8,10 @@ import '../../services/behaviour_report_service.dart';
 import '../../services/device_usage_service.dart';
 import '../../services/usage_insights.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bar_chart.dart';
-import '../../widgets/stat_card.dart';
 import 'report_screen.dart';
+import '../../atoms/app_card.dart';
+import '../../atoms/metric_icon.dart';
+import '../../components/week_bar_chart.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key, required this.tracking, this.goal});

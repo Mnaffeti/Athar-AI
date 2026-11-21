@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../theme/app_theme.dart';
 
 /// Circle with the user's initials in the brand colours.

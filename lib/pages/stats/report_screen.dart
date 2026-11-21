@@ -7,8 +7,8 @@ import '../../models/app_usage.dart';
 import '../../services/behaviour_report_service.dart';
 import '../../services/usage_insights.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bar_chart.dart';
-import '../../widgets/stat_card.dart';
+import '../../atoms/app_card.dart';
+import '../../components/week_bar_chart.dart';
 
 /// The behaviour report: patterns, next-week predictions, risky times, suggestions.
 class ReportScreen extends StatefulWidget {
