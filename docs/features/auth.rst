@@ -45,9 +45,9 @@ Main files
    * - ``lib/services/auth_service.dart``
      - Send and check codes, load and save the profile, sign out, and turn
        errors into user-facing messages
-   * - ``lib/screens/auth/sign_in_screen.dart``
+   * - ``lib/pages/auth/sign_in_screen.dart``
      - Email and Telegram inputs, plus the bot-link panel
-   * - ``lib/screens/auth/verify_code_screen.dart``
+   * - ``lib/pages/auth/verify_code_screen.dart``
      - 6-digit entry, 60-second resend, and routing after a successful code
    * - ``supabase/migrations/20261121000000_auth_profiles.sql``
      - The ``profiles`` and ``telegram_links`` tables, with row-level security
