@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import 'main_shell.dart';
+import 'onboarding/quiz_screen.dart';
 import 'onboarding/welcome_screen.dart';
 
 /// Animated brand splash shown right after the native launch screen.
@@ -40,12 +43,25 @@ class _SplashScreenState extends State<SplashScreen>
     Future.delayed(const Duration(milliseconds: 2400), _goNext);
   }
 
-  void _goNext() {
+  /// Signed in → home (or the quiz if the account has no profile yet);
+  /// otherwise → welcome.
+  Future<void> _goNext() async {
+    Widget next = const WelcomeScreen();
+    if (AuthService.isSignedIn) {
+      try {
+        final profile = await AuthService.loadProfile();
+        next = profile == null
+            ? const QuizScreen()
+            : MainShell(profile: profile);
+      } catch (_) {
+        // shortcut: offline launch falls back to welcome; cache the profile locally if that matters.
+      }
+    }
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (_, _, _) => const WelcomeScreen(),
+        pageBuilder: (_, _, _) => next,
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
       ),
