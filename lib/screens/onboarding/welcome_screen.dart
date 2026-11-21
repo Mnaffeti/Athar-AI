@@ -56,29 +56,13 @@ class WelcomeScreen extends StatelessWidget {
                 child: const Text('Get started'),
               ),
               const SizedBox(height: 12),
-              Center(
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const SignInScreen(isReturningUser: true),
-                    ),
-                  ),
-                  child: const Text.rich(
-                    TextSpan(
-                      text: 'Already have an account? ',
-                      style: TextStyle(color: AppColors.textSecondary),
-                      children: [
-                        TextSpan(
-                          text: 'Sign in',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+              OutlinedButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const SignInScreen(isReturningUser: true),
                   ),
                 ),
+                child: const Text('Log in with OTP'),
               ),
             ],
           ),

@@ -18,6 +18,55 @@ already passes `env.json`.
 Without `env.json` (plain `flutter run`) the app still works, but the coach
 falls back to canned offline replies.
 
+**In Chrome** (no phone needed; tracking and notifications are off on web):
+
+```
+flutter run -d chrome --dart-define-from-file=env.json
+```
+
+**Shareable APK** (on Windows, turn on Developer Mode first:
+`start ms-settings:developers`):
+
+```
+flutter build apk --release --dart-define-from-file=env.json
+```
+
+The APK is `build/app/outputs/flutter-apk/app-release.apk`. It works on any
+phone, because sign-in runs on the hosted Supabase project.
+
+## Sign-in (email or Telegram code)
+
+Users sign in with a one-time 6-digit code. Sign-up and login are the same
+flow: a new email or phone number creates an account, a known one logs in.
+
+- **Email:** enter your email address. The code comes by email, sent through
+  Brevo.
+- **Telegram:** enter your Telegram phone number with the country code.
+  - The first time, tap **Open Telegram**. In
+    [@AtharccBot](https://t.me/AtharccBot), tap **Start**, then **Share my
+    number**. Come back to the app and tap **Send code again**.
+  - After that, the code arrives straight away.
+- You stay signed in until **Profile > Sign out**.
+
+Each email and each phone number is a separate account. Your onboarding
+answers are saved to your account.
+
+Backend: [Supabase](https://supabase.com) free tier. Auth handles codes and
+sessions; Postgres has the `profiles` and `telegram_links` tables. Two Edge
+Functions deliver the Telegram codes and receive the bot's messages. Setup,
+deployment and troubleshooting are in [supabase/README.md](supabase/README.md).
+The feature spec and plan are in [specs/001-otp-auth/](specs/001-otp-auth/).
+
+> **Demo secrets.** This is an academic demo, so all keys are committed on
+> purpose:
+> - the Supabase URL and publishable key, in `lib/main.dart`
+> - the Brevo SMTP key is the exception: GitHub blocks it, so it lives in
+>   the gitignored `supabase/.env.local` (Supabase already has it)
+> - the bot token and hook secrets, in `supabase/.env`
+>
+> After the demo, revoke the bot token in @BotFather (`/revoke`) and delete
+> the SMTP key in Brevo.
+
 ## Groq API key (AI coach)
 
 1. Create a free key at <https://console.groq.com/keys>.

@@ -2,7 +2,32 @@ import 'package:flutter/material.dart';
 
 import '../../models/onboarding_answers.dart';
 import '../../theme/app_theme.dart';
+import '../../services/auth_service.dart';
 import '../auth/sign_in_screen.dart';
+import '../main_shell.dart';
+
+/// Signed-in users without a profile (new account from Welcome) save it here;
+/// everyone else signs in first.
+Future<void> _savePlan(BuildContext context, OnboardingAnswers a) async {
+  final nav = Navigator.of(context);
+  if (!AuthService.isSignedIn) {
+    nav.push(MaterialPageRoute(builder: (_) => SignInScreen(answers: a)));
+    return;
+  }
+  try {
+    await AuthService.saveProfile(a);
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AuthService.errorMessage(e))),
+    );
+    return;
+  }
+  nav.pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => MainShell(profile: a)),
+    (_) => false,
+  );
+}
 
 /// Shows a short "analysing" state, then reveals the personalised plan.
 class PlanScreen extends StatefulWidget {
@@ -176,9 +201,7 @@ class _Plan extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => SignInScreen(answers: a))),
+            onPressed: () => _savePlan(context, a),
             child: const Text('Save my plan'),
           ),
         ],

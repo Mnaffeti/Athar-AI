@@ -22,6 +22,37 @@ class OnboardingAnswers {
   String? gymFrequency;
   double phoneFreeGoalHours = 3;
 
+  /// Stored as `profiles.answers` in Supabase.
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'age': age,
+    'heightCm': heightCm,
+    'weightKg': weightKg,
+    'occupation': occupation,
+    'goal': goal,
+    'dailyScreenHours': dailyScreenHours,
+    'worstApps': worstApps.toList(),
+    'gymFrequency': gymFrequency,
+    'phoneFreeGoalHours': phoneFreeGoalHours,
+  };
+
+  factory OnboardingAnswers.fromJson(Map<String, dynamic> json) {
+    final a = OnboardingAnswers();
+    double num_(String key, double fallback) =>
+        (json[key] as num?)?.toDouble() ?? fallback;
+    a.name = json['name'] as String?;
+    a.age = num_('age', a.age);
+    a.heightCm = num_('heightCm', a.heightCm);
+    a.weightKg = num_('weightKg', a.weightKg);
+    a.occupation = json['occupation'] as String?;
+    a.goal = json['goal'] as String?;
+    a.dailyScreenHours = num_('dailyScreenHours', a.dailyScreenHours);
+    a.worstApps = {...((json['worstApps'] as List?) ?? const []).cast<String>()};
+    a.gymFrequency = json['gymFrequency'] as String?;
+    a.phoneFreeGoalHours = num_('phoneFreeGoalHours', a.phoneFreeGoalHours);
+    return a;
+  }
+
   double get bmi => weightKg / ((heightCm / 100) * (heightCm / 100));
 
   String get bmiLabel => switch (bmi) {
