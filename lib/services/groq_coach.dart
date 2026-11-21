@@ -6,13 +6,13 @@ import '../data/mock_data.dart';
 
 /// Chat completions against Groq's OpenAI-compatible API.
 ///
-/// The key is injected at build time, never committed:
+/// Run with:
 ///   flutter run --dart-define-from-file=env.json
 class GroqCoach {
   static const _apiKey = String.fromEnvironment('GROQ_API_KEY');
   static const _model = String.fromEnvironment(
     'GROQ_MODEL',
-    defaultValue: 'openai/gpt-oss-120b',
+    defaultValue: 'llama-3.3-70b-versatile',
   );
   static final _endpoint = Uri.parse(
     'https://api.groq.com/openai/v1/chat/completions',
@@ -26,6 +26,25 @@ class GroqCoach {
     required String name,
     required List<(String, bool)> history,
   }) async {
+    if (_apiKey.isEmpty) {
+      print('ERREUR GROQ : GROQ_API_KEY est vide. Lancez avec --dart-define-from-file=env.json');
+    }
+
+    final isReasoningModel =
+        _model.contains('gpt-oss') || _model.contains('qwen');
+
+    final Map<String, dynamic> payload = {
+      'model': _model,
+      'temperature': 0.7,
+      'max_tokens': 1024,
+      if (isReasoningModel) 'reasoning_effort': 'low',
+      'messages': [
+        {'role': 'system', 'content': _systemPrompt(name)},
+        for (final (text, fromUser) in history)
+          {'role': fromUser ? 'user' : 'assistant', 'content': text},
+      ],
+    };
+
     final response = await http
         .post(
           _endpoint,
@@ -33,25 +52,15 @@ class GroqCoach {
             'Authorization': 'Bearer $_apiKey',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({
-            'model': _model,
-            'temperature': 0.7,
-            // gpt-oss is a reasoning model; reasoning tokens count toward
-            // max_tokens, so keep effort low and leave headroom.
-            'reasoning_effort': 'low',
-            'max_tokens': 1024,
-            'messages': [
-              {'role': 'system', 'content': _systemPrompt(name)},
-              for (final (text, fromUser) in history)
-                {'role': fromUser ? 'user' : 'assistant', 'content': text},
-            ],
-          }),
+          body: jsonEncode(payload),
         )
         .timeout(const Duration(seconds: 30));
 
     if (response.statusCode != 200) {
+      print('ERREUR GROQ (${response.statusCode}) : ${response.body}');
       throw Exception('Groq ${response.statusCode}: ${response.body}');
     }
+
     final data = jsonDecode(utf8.decode(response.bodyBytes));
     return (data['choices'][0]['message']['content'] as String).trim();
   }

@@ -139,13 +139,12 @@ class _CoachScreenState extends State<CoachScreen> {
           'Authorization': 'Bearer $_groqApiKey',
         },
         body: jsonEncode({
-          'model': 'llama-3.3-70b-versatile',
+          'model': 'llama3-70b-8192',
           'messages': [
             {
               'role': 'system',
               'content': systemPrompt,
             },
-            // On peut ajouter l'historique récent ici si on veut
             ...(_messages.length > 6
                     ? _messages.sublist(_messages.length - 6)
                     : _messages)
