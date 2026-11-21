@@ -50,6 +50,8 @@ curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
   -d secret_token=$TELEGRAM_WEBHOOK_SECRET -d 'allowed_updates=["message"]'
 ```
 
+Behaviour report (feature 002): `npx supabase functions deploy send-report-telegram --no-verify-jwt --use-api`. It reuses the same secrets and checks the caller's sign-in itself.
+
 Dashboard only: **Authentication > Sign In / Providers > Phone > SMS OTP Expiry** = `300`. `config.toml` has no field for it.
 
 Flow: the app calls `signInWithOtp(phone)`. The Send SMS hook runs `send-sms-telegram`, which looks up `telegram_links`.

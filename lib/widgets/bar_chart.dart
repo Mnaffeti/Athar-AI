@@ -12,6 +12,7 @@ class WeekBarChart extends StatelessWidget {
     this.height = 140,
     this.goal,
     this.showLabels = true,
+    this.labels,
   });
 
   final List<double> values;
@@ -19,6 +20,9 @@ class WeekBarChart extends StatelessWidget {
   final double height;
   final double? goal;
   final bool showLabels;
+
+  /// One label per bar; defaults to weekdays.
+  final List<String>? labels;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +69,7 @@ class WeekBarChart extends StatelessWidget {
                           if (showLabels) ...[
                             const SizedBox(height: 6),
                             Text(
-                              MockData.weekdays[i % 7],
+                              labels?[i] ?? MockData.weekdays[i % 7],
                               style: TextStyle(
                                 fontSize: 12,
                                 color: i == values.length - 1

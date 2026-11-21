@@ -121,7 +121,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             onOpenStats: () => setState(() => _index = 1),
             onOpenProfile: _openProfile,
           ),
-          StatsScreen(tracking: _tracking),
+          StatsScreen(tracking: _tracking, goal: widget.profile.goal),
           TrackingScreen(
             key: ValueKey(
               '${_tracking.date}-${_tracking.screenHours}-${_tracking.socialHours}',

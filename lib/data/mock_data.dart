@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/app_usage.dart';
 import '../theme/app_theme.dart';
 
 /// One tracked habit metric with today's value and the last 7 days.
@@ -140,6 +141,29 @@ class MockData {
     ('YouTube', 0.9, AppColors.scroll),
     ('X', 0.25, AppColors.textSecondary),
   ];
+
+  /// 7 days of per-app usage from [appBreakdown], for previewing the report
+  /// where real usage can't be read (web, iOS). Evenings are the busiest.
+  static List<AppUsageDay> sampleUsage({DateTime? today}) {
+    const dayFactor = [1.2, 1.1, 0.9, 1.0, 0.8, 1.4, 1.3]; // Mon..Sun
+    const hourShare = {8: 0.1, 13: 0.2, 18: 0.25, 21: 0.45};
+    final end = today ?? DateTime.now();
+    return [
+      for (var back = 6; back >= 0; back--)
+        for (final (name, hours, _) in appBreakdown)
+          () {
+            final day = DateTime(end.year, end.month, end.day - back);
+            final minutes = hours * 60 * dayFactor[day.weekday - 1];
+            return AppUsageDay(
+              date: '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}',
+              package: 'sample.$name',
+              label: name,
+              minutes: minutes,
+              hourly: [for (var h = 0; h < 24; h++) minutes * (hourShare[h] ?? 0)],
+            );
+          }(),
+    ];
+  }
 
   /// Fun comparison for the scroll distance.
   static String scrollComparison(double meters) {

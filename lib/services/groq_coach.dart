@@ -9,16 +9,16 @@ import '../data/mock_data.dart';
 /// The key is injected at build time, never committed:
 ///   flutter run --dart-define-from-file=env.json
 class GroqCoach {
-  static const _apiKey = String.fromEnvironment('GROQ_API_KEY');
-  static const _model = String.fromEnvironment(
+  static const apiKey = String.fromEnvironment('GROQ_API_KEY');
+  static const model = String.fromEnvironment(
     'GROQ_MODEL',
     defaultValue: 'openai/gpt-oss-120b',
   );
-  static final _endpoint = Uri.parse(
+  static final endpoint = Uri.parse(
     'https://api.groq.com/openai/v1/chat/completions',
   );
 
-  static bool get isConfigured => _apiKey.isNotEmpty;
+  static bool get isConfigured => apiKey.isNotEmpty;
 
   /// [history] is the conversation so far as (text, fromUser) pairs,
   /// ending with the user's latest message.
@@ -28,13 +28,13 @@ class GroqCoach {
   }) async {
     final response = await http
         .post(
-          _endpoint,
+          endpoint,
           headers: {
-            'Authorization': 'Bearer $_apiKey',
+            'Authorization': 'Bearer $apiKey',
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'model': _model,
+            'model': model,
             'temperature': 0.7,
             // gpt-oss is a reasoning model; reasoning tokens count toward
             // max_tokens, so keep effort low and leave headroom.

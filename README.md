@@ -67,6 +67,28 @@ The feature spec and plan are in [specs/001-otp-auth/](specs/001-otp-auth/).
 > After the demo, revoke the bot token in @BotFather (`/revoke`) and delete
 > the SMTP key in Brevo.
 
+## Screen-time report (Stats tab)
+
+On Android, the Stats tab shows your real screen time from the last 7 days: a
+daily chart and your top 5 apps. Grant **usage access** when asked. On web and
+iPhone, the charts show labelled sample data.
+
+With 3 or more days of data, tap **Generate my report** for:
+
+- patterns in how you use your phone
+- a forecast for next week, with ranges
+- your riskiest times of day
+- 3 suggestions tied to your goal
+
+Every number is computed on the phone. Groq only writes the wording, and gets
+only app names, minutes and times of day, never your name, email or phone. If
+Groq is unavailable, you get an offline summary instead. You can generate a new
+report once an hour.
+
+Accounts that signed in with Telegram can tap **Send to Telegram** to get the
+chart and the text from @AtharccBot. The `send-report-telegram` function
+handles this; see [specs/002-behaviour-insights/](specs/002-behaviour-insights/).
+
 ## Groq API key (AI coach)
 
 1. Create a free key at <https://console.groq.com/keys>.

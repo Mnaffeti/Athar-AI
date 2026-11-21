@@ -8,6 +8,21 @@ export const db = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+export function sendTelegramPhoto(
+  chatId: number,
+  png: Uint8Array,
+  caption: string,
+): Promise<Response> {
+  const form = new FormData();
+  form.append("chat_id", String(chatId));
+  form.append("caption", caption);
+  form.append("photo", new Blob([png], { type: "image/png" }), "report.png");
+  return fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+    method: "POST",
+    body: form,
+  });
+}
+
 export function sendTelegram(
   chatId: number,
   text: string,

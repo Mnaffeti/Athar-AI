@@ -1,21 +1,112 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/mock_data.dart';
+import '../../models/app_usage.dart';
 import '../../models/daily_tracking.dart';
+import '../../services/behaviour_report_service.dart';
+import '../../services/device_usage_service.dart';
+import '../../services/usage_insights.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bar_chart.dart';
 import '../../widgets/stat_card.dart';
+import 'report_screen.dart';
 
 class StatsScreen extends StatefulWidget {
-  const StatsScreen({super.key, required this.tracking});
+  const StatsScreen({super.key, required this.tracking, this.goal});
   final DailyTracking tracking;
+
+  /// Onboarding goal, passed to the report (spec FR-005d).
+  final String? goal;
 
   @override
   State<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _StatsScreenState extends State<StatsScreen> {
+class _StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
   Metric _selected = MockData.screenTime;
+
+  /// Real per-app usage; null means sample data (web, iOS, no usage access).
+  UsageSummary? _summary;
+  late final _sampleSummary = summarize(MockData.sampleUsage());
+  BehaviourReport? _latest;
+  bool _generating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Back from the usage-access settings screen: pick up the new data.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _load();
+  }
+
+  Future<void> _load() async {
+    final rows = await DeviceUsageService.readAppUsage();
+    final latest = await BehaviourReportService.loadLatest();
+    if (!mounted) return;
+    setState(() {
+      _summary = rows == null || rows.isEmpty ? null : summarize(rows);
+      _latest = latest;
+    });
+  }
+
+  Future<void> _generate() async {
+    if (!await BehaviourReportService.hasConsent()) {
+      if (!mounted) return;
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Write my report?'),
+          content: const Text(
+            'To write your report, Athar sends app names, minutes and times of '
+            "day to Groq's AI. No name, email or phone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+      await BehaviourReportService.giveConsent();
+    }
+    setState(() => _generating = true);
+    final report = await BehaviourReportService.generate(
+      _summary ?? _sampleSummary,
+      goal: widget.goal,
+      sample: _summary == null,
+    );
+    if (!mounted) return;
+    setState(() {
+      _generating = false;
+      _latest = report;
+    });
+    _open(report);
+  }
+
+  Future<void> _open(BehaviourReport report) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ReportScreen(report: report)),
+    );
+    _load(); // the report may have been marked as sent
+  }
 
   Metric _todayMetric(Metric demo, double today) {
     final week = List<double>.of(demo.week);
@@ -24,7 +115,13 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   List<Metric> get _metrics => [
-    _todayMetric(MockData.screenTime, widget.tracking.screenHours),
+    if (_summary case final s?)
+      MockData.screenTime.copyWith(
+        week: [for (final m in s.dailyTotals.values) m / 60],
+        today: s.dailyTotals.values.last / 60,
+      )
+    else
+      _todayMetric(MockData.screenTime, widget.tracking.screenHours),
     _todayMetric(MockData.scroll, widget.tracking.scrollMinutes),
     _todayMetric(MockData.socialMedia, widget.tracking.socialHours),
     _todayMetric(MockData.gym, widget.tracking.gymHours),
@@ -52,6 +149,10 @@ class _StatsScreenState extends State<StatsScreen> {
               letterSpacing: -0.3,
             ),
           ),
+          if (_summary == null) ...[
+            const SizedBox(height: 8),
+            const _SampleDataNote(),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             height: 40,
@@ -141,6 +242,9 @@ class _StatsScreenState extends State<StatsScreen> {
                 WeekBarChart(
                   key: ValueKey(m.id),
                   values: m.week,
+                  labels: m.id == 'screen' && _summary != null
+                      ? [for (final d in _summary!.dailyTotals.keys) weekdayName(d)]
+                      : null,
                   color: m.color,
                   goal: m.goal,
                   height: 180,
@@ -163,38 +267,141 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const _InsightCard(),
+          _ReportCard(
+            summary: _summary ?? _sampleSummary,
+            sample: _summary == null,
+            latest: _latest,
+            generating: _generating,
+            onGenerate: _generate,
+            onOpen: _open,
+          ),
           const SizedBox(height: 14),
-          const _AppBreakdown(),
+          _AppBreakdown(summary: _summary),
         ],
       ),
     );
   }
 }
 
-class _InsightCard extends StatelessWidget {
-  const _InsightCard();
+class _SampleDataNote extends StatelessWidget {
+  const _SampleDataNote();
 
   @override
   Widget build(BuildContext context) {
+    final android = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    return Wrap(
+      spacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        const Chip(
+          label: Text('Sample data'),
+          visualDensity: VisualDensity.compact,
+        ),
+        if (android)
+          const TextButton(
+            onPressed: DeviceUsageService.openUsageAccessSettings,
+            child: Text('Grant usage access'),
+          )
+        else
+          const Text(
+            'Real data needs the Android app.',
+            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+          ),
+      ],
+    );
+  }
+}
+
+/// "Your report" card: generate, view, or wait for enough data (contracts/stats-ui.md).
+class _ReportCard extends StatelessWidget {
+  const _ReportCard({
+    required this.summary,
+    required this.sample,
+    required this.latest,
+    required this.generating,
+    required this.onGenerate,
+    required this.onOpen,
+  });
+
+  final UsageSummary summary;
+  final bool sample;
+  final BehaviourReport? latest;
+  final bool generating;
+  final VoidCallback onGenerate;
+  final ValueChanged<BehaviourReport> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = summary;
+    final report = latest;
+    final missing = BehaviourReportService.minDays - s.days;
+    final wait = BehaviourReportService.cooldownLeft(report);
+
+    final String text;
+    Widget? action;
+    if (missing > 0) {
+      text =
+          'Your report needs ${BehaviourReportService.minDays} days of data. '
+          '$missing more ${missing == 1 ? 'day' : 'days'} to go.';
+    } else {
+      text = sample && report == null
+          ? 'Preview the report with sample data. Real reports use your own '
+                'screen time in the Android app.'
+          : report == null
+          ? 'Get patterns, a forecast for next week and tips, based on your '
+                'last ${s.days} days.'
+          : 'Last report: ${report.generatedAt.toLocal().toString().substring(0, 16)}'
+                '${report.sample ? ' (sample data)' : ''}';
+      action = FilledButton(
+        onPressed: generating || wait > Duration.zero ? null : onGenerate,
+        child: generating
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.onAccent,
+                ),
+              )
+            : Text(
+                wait > Duration.zero
+                    ? 'Generate again in ${wait.inMinutes + 1} min'
+                    : report == null
+                    ? (sample ? 'Generate sample report' : 'Generate my report')
+                    : 'Generate again',
+              ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.accentDim,
         borderRadius: BorderRadius.circular(22),
       ),
-      child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(Icons.auto_awesome, color: AppColors.accent),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Your screen time dropped 35% since Monday. '
-              'Fridays are your best day — try copying that routine on Saturday.',
-              style: TextStyle(height: 1.45),
-            ),
+          const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: AppColors.accent),
+              SizedBox(width: 10),
+              Text(
+                'Your report',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ],
           ),
+          const SizedBox(height: 10),
+          Text(text, style: const TextStyle(height: 1.45)),
+          if (report != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: () => onOpen(report),
+              child: const Text('View report'),
+            ),
+          ],
+          if (action != null) ...[const SizedBox(height: 8), action],
         ],
       ),
     );
@@ -202,19 +409,36 @@ class _InsightCard extends StatelessWidget {
 }
 
 class _AppBreakdown extends StatelessWidget {
-  const _AppBreakdown();
+  const _AppBreakdown({required this.summary});
+  final UsageSummary? summary;
+
+  static const _palette = [
+    AppColors.social,
+    AppColors.screen,
+    AppColors.scroll,
+    AppColors.gym,
+    AppColors.accent,
+    AppColors.textSecondary,
+  ];
 
   @override
   Widget build(BuildContext context) {
-    const apps = MockData.appBreakdown;
+    final s = summary;
+    final apps = s == null
+        ? MockData.appBreakdown
+        : [
+            for (var i = 0; i < s.topApps.length; i++)
+              (s.topApps[i].label, s.topApps[i].minPerDay / 60, _palette[i % _palette.length]),
+          ];
+    if (apps.isEmpty) return const SizedBox.shrink();
     final max = apps.map((a) => a.$2).reduce((a, b) => a > b ? a : b);
     return AppCard(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Top apps today',
+          Text(
+            s == null ? 'Top apps today' : 'Top apps (daily average)',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 16),
