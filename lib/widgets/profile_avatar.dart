@@ -31,8 +31,8 @@ class ProfileAvatar extends StatelessWidget {
             color: AppColors.brandNavy,
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.brandLight.withValues(alpha: 0.35),
-              width: 1.5,
+              color: AppColors.brandLight.withValues(alpha: 0.6),
+              width: 2,
             ),
           ),
           child: Text(

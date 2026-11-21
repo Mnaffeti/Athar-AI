@@ -30,7 +30,9 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
           _Header(profile: profile, onOpenProfile: onOpenProfile),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: 18),
           _ScreenTimeHero(tracking: tracking),
           const SizedBox(height: 14),
           _ScrollCard(tracking: tracking),
@@ -69,30 +71,62 @@ class _Header extends StatelessWidget {
   final OnboardingAnswers profile;
   final VoidCallback onOpenProfile;
 
+  static const _days = [
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', //
+    'Sunday',
+  ];
+  static const _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final hour = DateTime.now().hour;
-    final greeting = hour < 12
+    final now = DateTime.now();
+    final greeting = now.hour < 12
         ? 'Good morning'
-        : hour < 18
+        : now.hour < 18
         ? 'Good afternoon'
         : 'Good evening';
+    final date =
+        '${_days[now.weekday - 1]}, ${_months[now.month - 1]} ${now.day}';
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                greeting,
-                style: const TextStyle(color: AppColors.textSecondary),
+                date.toUpperCase(),
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                profile.name ?? 'there',
+              const SizedBox(height: 6),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$greeting,\n',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    TextSpan(text: profile.name ?? 'there'),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: AppFonts.display,
-                  fontSize: 28,
+                  fontSize: 30,
+                  height: 1.15,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
                 ),
@@ -100,24 +134,31 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.brandRed.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.brandRed.withValues(alpha: 0.45),
+        const SizedBox(width: 12),
+        Semantics(
+          label: '${MockData.streakDays} day streak',
+          excludeSemantics: true,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(10, 7, 12, 7),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceHigh,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
             ),
-          ),
-          child: const Row(
-            children: [
-              Text('🔥', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 6),
-              Text(
-                '${MockData.streakDays} days',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ],
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.local_fire_department_rounded,
+                  size: 18,
+                  color: AppColors.scroll,
+                ),
+                SizedBox(width: 4),
+                Text(
+                  '${MockData.streakDays}',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(width: 10),
