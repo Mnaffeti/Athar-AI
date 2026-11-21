@@ -9,9 +9,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quit/screens/splash_screen.dart';
+import 'package:quit/models/onboarding_answers.dart';
+import 'package:quit/pages/main_shell.dart';
+import 'package:quit/pages/splash_screen.dart';
 import 'package:quit/theme/app_theme.dart';
-import 'package:quit/widgets/profile_avatar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:quit/atoms/profile_avatar.dart';
 
 class Device {
   const Device(this.name, this.width, this.height, this.pixelRatio);
@@ -82,7 +86,17 @@ ThemeData _screenshotTheme() {
 }
 
 void main() {
-  setUpAll(_loadFonts);
+  setUpAll(() async {
+    await _loadFonts();
+    // Splash checks the session: a signed-out client with no network.
+    // ignore: invalid_use_of_visible_for_testing_member
+    SharedPreferences.setMockInitialValues({});
+    await Supabase.initialize(
+      url: 'https://example.supabase.co',
+      publishableKey: 'test',
+      authOptions: const FlutterAuthClientOptions(detectSessionInUri: false),
+    );
+  });
 
   for (final device in devices) {
     testWidgets('screenshots on ${device.name}', (tester) async {
@@ -205,8 +219,11 @@ void main() {
       await tapText('Save my plan');
       await shot('sign_up');
 
-      await tester.tap(find.text('Continue with Google'));
-      await tester.pump(const Duration(seconds: 1));
+      // Real sign-in needs an emailed or Telegram code, so enter the app directly.
+      Navigator.of(tester.element(find.byType(Scaffold).last)).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => MainShell(profile: OnboardingAnswers.demo())),
+        (_) => false,
+      );
       await tester.pumpAndSettle();
 
       // --- Main app --------------------------------------------------------

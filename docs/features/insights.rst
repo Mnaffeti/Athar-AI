@@ -111,9 +111,9 @@ Main files
    * - ``lib/services/behaviour_report_service.dart``
      - The Groq call, validation, storage, cooldown, consent and the Telegram
        send
-   * - ``lib/screens/stats/stats_screen.dart``, ``report_screen.dart``
+   * - ``lib/pages/stats/stats_screen.dart``, ``report_screen.dart``
      - Charts, the "Your report" card and the report view
-   * - ``lib/widgets/bar_chart.dart``
+   * - ``lib/components/week_bar_chart.dart``
      - ``WeekBarChart``, which gained custom labels
    * - ``supabase/functions/send-report-telegram/index.ts``
      - Checks the caller's sign-in, then sends the photo and text to their

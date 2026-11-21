@@ -14,38 +14,38 @@ lists every part of the app and where its code lives.
    * - Splash and welcome
      - Brand splash, then a welcome screen with **Get started** and
        **Log in with OTP**. Signed-in users go straight to the home screen.
-     - ``lib/screens/splash_screen.dart``,
-       ``lib/screens/onboarding/welcome_screen.dart``
+     - ``lib/pages/splash_screen.dart``,
+       ``lib/pages/onboarding/welcome_screen.dart``
    * - Onboarding quiz and plan
      - A short quiz (name, age, height, weight, goal, worst apps, gym
        frequency, phone-free goal) that produces a personal plan.
-     - ``lib/screens/onboarding/quiz_screen.dart``,
+     - ``lib/pages/onboarding/quiz_screen.dart``,
        ``plan_screen.dart``, ``lib/models/onboarding_answers.dart``
    * - Sign-in (feature 001)
      - One-time 6-digit codes by **email** or **Telegram**. Sign-up and login
        are the same flow, and the session lasts until sign-out.
-     - ``lib/screens/auth/``, ``lib/services/auth_service.dart``,
+     - ``lib/pages/auth/``, ``lib/services/auth_service.dart``,
        ``supabase/``. See :doc:`features/auth`.
    * - Home
      - A greeting with the date, today's metrics and progress rings.
-     - ``lib/screens/home/home_screen.dart``
+     - ``lib/pages/home/home_screen.dart``
    * - Track
      - Daily screen time, scrolling, social media, gym and phone-free time.
        On Android, totals come from the phone's usage statistics.
-     - ``lib/screens/tracking/``, ``lib/services/tracking_service.dart``,
+     - ``lib/pages/tracking/``, ``lib/services/tracking_service.dart``,
        ``device_usage_service.dart``
    * - Stats and AI report (feature 002)
      - A 7-day chart, the top apps, and an AI behaviour report with
        patterns, a forecast for next week, risky times and suggestions. It
        can be sent to Telegram.
-     - ``lib/screens/stats/``, ``lib/services/usage_insights.dart``,
+     - ``lib/pages/stats/``, ``lib/services/usage_insights.dart``,
        ``behaviour_report_service.dart``. See :doc:`features/insights`.
    * - AI coach
      - A chat coach powered by Groq that knows the user's plan.
-     - ``lib/screens/coach/``, ``lib/services/groq_coach.dart``
+     - ``lib/pages/coach/``, ``lib/services/groq_coach.dart``
    * - Profile
      - Body stats, goals, settings and **Sign out**.
-     - ``lib/screens/profile/profile_screen.dart``
+     - ``lib/pages/profile/profile_screen.dart``
    * - Reminders
      - Local notifications to nudge phone-free time (not on web).
      - ``lib/services/notification_service.dart``

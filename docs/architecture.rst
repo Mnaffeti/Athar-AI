@@ -4,7 +4,7 @@ Architecture
 .. code-block:: text
 
    ┌──────────────── Flutter app (Android / iOS / web) ────────────────┐
-   │ screens/ (setState)  →  services/ (static classes)  →  models/    │
+   │ pages/ → components/ → atoms/   ·   services/   ·   models/       │
    └───────┬──────────────────────┬───────────────────┬────────────────┘
            │ supabase_flutter     │ http               │ MethodChannel
            ▼                      ▼                    ▼
@@ -20,10 +20,45 @@ Architecture
               ▼                                │
            Brevo ──▶ user's inbox     Telegram ◀┘
 
+UI structure: atoms, components, pages
+--------------------------------------
+
+The interface follows a simplified **atomic design**, with three levels. Each
+level uses only its own level or the ones below it: atoms import no
+components or pages, and components import no pages.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 32 50
+
+   * - Level
+     - Folder
+     - What's in it
+   * - **Atoms**
+     - ``lib/atoms/`` (10)
+     - The smallest pieces, with no app logic: ``AppCard``, ``AppLogo``,
+       ``BulletText``, ``CardTitle``, ``SectionTitle``, ``DeltaChip``,
+       ``MetricIcon``, ``ProfileAvatar``, ``ProgressRing``,
+       ``RoundIconButton``
+   * - **Components**
+     - ``lib/components/`` (25)
+     - Pieces built from atoms, for example ``WeekBarChart``,
+       ``ReportCard``, ``AppBreakdown``, ``BotLinkPanel``, ``ChatBubble``,
+       ``HomeHeader``, ``QuestionPage``, ``PlanSummary``, ``OptionTile``
+       and ``MetricTile``
+   * - **Pages**
+     - ``lib/pages/``
+     - Full screens. They hold state, call services and navigate, and are
+       assembled from components and atoms.
+
+The refactor moved code without changing it. It was checked with pixel-level
+screenshot comparisons of every screen (``test_screenshots/``) and the unit
+tests after each step.
+
 Layers and conventions
 ----------------------
 
-* **Screens** are ``StatefulWidget`` classes using ``setState``. A move to
+* **Pages** are ``StatefulWidget`` classes using ``setState``. A move to
   MVVM is planned for later and is deliberately not part of these features.
 * **Services** are static classes in ``lib/services/``, for example
   ``AuthService``, ``GroqCoach``, ``DeviceUsageService`` and
