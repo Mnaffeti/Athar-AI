@@ -4,6 +4,9 @@ import '../../models/onboarding_answers.dart';
 import '../../theme/app_theme.dart';
 import 'plan_screen.dart';
 import '../../components/option_tile.dart';
+import '../../components/question_page.dart';
+import '../../components/slider_answer.dart';
+import '../../components/stepper_field.dart';
 
 /// Multi-step onboarding questionnaire, one question per page.
 class QuizScreen extends StatefulWidget {
@@ -144,7 +147,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // ---- Steps ---------------------------------------------------------------
 
-  Widget _nameStep() => _QuestionPage(
+  Widget _nameStep() => QuestionPage(
     title: "First, what should we call you?",
     subtitle: 'Your coach will use this to keep things personal.',
     child: TextField(
@@ -158,12 +161,12 @@ class _QuizScreenState extends State<QuizScreen> {
     ),
   );
 
-  Widget _bodyStep() => _QuestionPage(
+  Widget _bodyStep() => QuestionPage(
     title: 'A little about you',
     subtitle: 'Helps us tailor your gym goals. Only you can see this.',
     child: Column(
       children: [
-        _StepperField(
+        StepperField(
           label: 'Age',
           value: _answers.age,
           min: 13,
@@ -171,7 +174,7 @@ class _QuizScreenState extends State<QuizScreen> {
           unit: 'years',
           onChanged: (v) => setState(() => _answers.age = v),
         ),
-        _StepperField(
+        StepperField(
           label: 'Height',
           value: _answers.heightCm,
           min: 120,
@@ -179,7 +182,7 @@ class _QuizScreenState extends State<QuizScreen> {
           unit: 'cm',
           onChanged: (v) => setState(() => _answers.heightCm = v),
         ),
-        _StepperField(
+        StepperField(
           label: 'Weight',
           value: _answers.weightKg,
           min: 30,
@@ -202,7 +205,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ('🚀', 'Entrepreneur'),
       ('✨', 'Other'),
     ];
-    return _QuestionPage(
+    return QuestionPage(
       title: 'What do you do?',
       subtitle: 'Your day shapes your screen habits.',
       child: Column(
@@ -227,7 +230,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ('🎯', 'Focus better at work / school'),
       ('😴', 'Sleep better'),
     ];
-    return _QuestionPage(
+    return QuestionPage(
       title: "What's your main goal?",
       subtitle: 'Pick the one that matters most right now.',
       child: Column(
@@ -244,10 +247,10 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Widget _screenTimeStep() => _QuestionPage(
+  Widget _screenTimeStep() => QuestionPage(
     title: 'How many hours a day are you on your phone?',
     subtitle: "Be honest — you can check Settings › Screen Time.",
-    child: _SliderAnswer(
+    child: SliderAnswer(
       value: _answers.dailyScreenHours,
       min: 1,
       max: 12,
@@ -267,7 +270,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ('👻', 'Snapchat'),
       ('🎮', 'Games'),
     ];
-    return _QuestionPage(
+    return QuestionPage(
       title: 'Which apps steal most of your time?',
       subtitle: 'Select all that apply.',
       child: Column(
@@ -295,7 +298,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ('🏃', '3–4× a week'),
       ('🏋️', '5+ times a week'),
     ];
-    return _QuestionPage(
+    return QuestionPage(
       title: 'How often do you work out?',
       subtitle: "We'll track your gym time and total hours.",
       child: Column(
@@ -312,10 +315,10 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Widget _phoneFreeStep() => _QuestionPage(
+  Widget _phoneFreeStep() => QuestionPage(
     title: 'How many phone-free hours do you want each day?',
     subtitle: 'Time where your phone is locked away. Start small.',
-    child: _SliderAnswer(
+    child: SliderAnswer(
       value: _answers.phoneFreeGoalHours,
       min: 1,
       max: 8,
@@ -328,242 +331,4 @@ class _QuizScreenState extends State<QuizScreen> {
       onChanged: (v) => setState(() => _answers.phoneFreeGoalHours = v),
     ),
   );
-}
-
-class _QuestionPage extends StatelessWidget {
-  const _QuestionPage({
-    required this.title,
-    required this.subtitle,
-    required this.child,
-  });
-
-  final String title;
-  final String subtitle;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: AppFonts.display,
-              fontSize: 30,
-              height: 1.15,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 15,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 32),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-/// Card with a big value, −/+ buttons and a slider for quick changes.
-class _StepperField extends StatelessWidget {
-  const _StepperField({
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.unit,
-    required this.onChanged,
-  });
-
-  final String label;
-  final double value;
-  final double min;
-  final double max;
-  final String unit;
-  final ValueChanged<double> onChanged;
-
-  void _step(double delta) => onChanged((value + delta).clamp(min, max));
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.fromLTRB(18, 14, 10, 6),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text.rich(
-                      TextSpan(
-                        text: value.round().toString(),
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: '  $unit',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _RoundButton(icon: Icons.remove_rounded, onTap: () => _step(-1)),
-              const SizedBox(width: 8),
-              _RoundButton(icon: Icons.add_rounded, onTap: () => _step(1)),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              activeTrackColor: AppColors.accent,
-              inactiveTrackColor: AppColors.surfaceHigh,
-              thumbColor: AppColors.textPrimary,
-              overlayShape: SliderComponentShape.noOverlay,
-            ),
-            child: Slider(
-              value: value,
-              min: min,
-              max: max,
-              divisions: (max - min).round(),
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surfaceHigh,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 40,
-          height: 40,
-          child: Icon(icon, size: 20, color: AppColors.textPrimary),
-        ),
-      ),
-    );
-  }
-}
-
-class _SliderAnswer extends StatelessWidget {
-  const _SliderAnswer({
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.suffix,
-    required this.footnote,
-    required this.onChanged,
-  });
-
-  final double value;
-  final double min;
-  final double max;
-  final String suffix;
-  final String Function(double) footnote;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              value.round().toString(),
-              style: const TextStyle(
-                fontSize: 96,
-                fontWeight: FontWeight.w800,
-                color: AppColors.accent,
-                letterSpacing: -4,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              suffix,
-              style: const TextStyle(
-                fontSize: 18,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 8,
-            activeTrackColor: AppColors.accent,
-            inactiveTrackColor: AppColors.surfaceHigh,
-            thumbColor: AppColors.textPrimary,
-            overlayColor: AppColors.accent.withValues(alpha: 0.12),
-          ),
-          child: Slider(
-            value: value,
-            min: min,
-            max: max,
-            divisions: (max - min).round(),
-            onChanged: onChanged,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          footnote(value),
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
-        ),
-      ],
-    );
-  }
 }

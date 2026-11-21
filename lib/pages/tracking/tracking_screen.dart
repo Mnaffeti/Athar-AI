@@ -4,6 +4,7 @@ import '../../models/daily_tracking.dart';
 import '../../theme/app_theme.dart';
 import '../../services/notification_service.dart';
 import '../../atoms/app_card.dart';
+import '../../components/number_field.dart';
 
 class TrackingScreen extends StatefulWidget {
   const TrackingScreen({
@@ -180,35 +181,35 @@ class _TrackingScreenState extends State<TrackingScreen> {
             padding: const EdgeInsets.all(18),
             child: Column(
               children: [
-                _NumberField(
+                NumberField(
                   controller: _screen,
                   label: 'Screen time',
                   suffix: 'hours',
                   icon: Icons.smartphone_rounded,
                 ),
                 const SizedBox(height: 12),
-                _NumberField(
+                NumberField(
                   controller: _scroll,
                   label: 'Social scroll',
                   suffix: 'minutes',
                   icon: Icons.swipe_vertical_rounded,
                 ),
                 const SizedBox(height: 12),
-                _NumberField(
+                NumberField(
                   controller: _social,
                   label: 'Social media',
                   suffix: 'hours',
                   icon: Icons.forum_rounded,
                 ),
                 const SizedBox(height: 12),
-                _NumberField(
+                NumberField(
                   controller: _gym,
                   label: 'Gym',
                   suffix: 'hours',
                   icon: Icons.fitness_center_rounded,
                 ),
                 const SizedBox(height: 12),
-                _NumberField(
+                NumberField(
                   controller: _phoneFree,
                   label: 'Phone-free',
                   suffix: 'hours',
@@ -290,33 +291,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
             label: Text(_saving ? 'Saving...' : 'Save today'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _NumberField extends StatelessWidget {
-  const _NumberField({
-    required this.controller,
-    required this.label,
-    required this.suffix,
-    required this.icon,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String suffix;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.textSecondary),
-        suffixText: suffix,
       ),
     );
   }

@@ -9,6 +9,9 @@ import '../../services/usage_insights.dart';
 import '../../theme/app_theme.dart';
 import '../../atoms/app_card.dart';
 import '../../components/week_bar_chart.dart';
+import '../../atoms/bullet_text.dart';
+import '../../atoms/card_title.dart';
+import '../../components/report_section.dart';
 
 /// The behaviour report: patterns, next-week predictions, risky times, suggestions.
 class ReportScreen extends StatefulWidget {
@@ -97,15 +100,15 @@ class _ReportScreenState extends State<ReportScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          _Section(title: 'Patterns', items: r.patterns),
+          ReportSection(title: 'Patterns', items: r.patterns),
           AppCard(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _Title('Next week'),
+                const CardTitle('Next week'),
                 for (final p in r.predictions)
-                  _Bullet(
+                  BulletText(
                     '${p.subject}: ~${_hours(p.mean)} '
                     '(${_hours(p.low)}–${_hours(p.high)})'
                     '${p.note == null ? '' : '. ${p.note}'}',
@@ -138,8 +141,8 @@ class _ReportScreenState extends State<ReportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _Title('Risky times'),
-                for (final t in r.riskyTimes) _Bullet(t),
+                const CardTitle('Risky times'),
+                for (final t in r.riskyTimes) BulletText(t),
                 const SizedBox(height: 16),
                 WeekBarChart(
                   values: r.blocks,
@@ -156,7 +159,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          _Section(title: 'Try this', items: r.suggestions),
+          ReportSection(title: 'Try this', items: r.suggestions),
           if (BehaviourReportService.canSendToTelegram) ...[
             FilledButton.icon(
               onPressed: _sending ? null : _sendToTelegram,
@@ -188,55 +191,4 @@ class _ReportScreenState extends State<ReportScreen> {
       ),
     );
   }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.items});
-  final String title;
-  final List<String> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: AppCard(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [_Title(title), for (final i in items) _Bullet(i)],
-        ),
-      ),
-    );
-  }
-}
-
-class _Title extends StatelessWidget {
-  const _Title(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Text(
-      text,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-    ),
-  );
-}
-
-class _Bullet extends StatelessWidget {
-  const _Bullet(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('•  ', style: TextStyle(color: AppColors.textMuted)),
-        Expanded(child: Text(text, style: const TextStyle(height: 1.4))),
-      ],
-    ),
-  );
 }

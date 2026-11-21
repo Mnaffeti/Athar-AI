@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/mock_data.dart';
@@ -12,6 +11,9 @@ import 'report_screen.dart';
 import '../../atoms/app_card.dart';
 import '../../atoms/metric_icon.dart';
 import '../../components/week_bar_chart.dart';
+import '../../components/app_breakdown.dart';
+import '../../components/report_card.dart';
+import '../../components/sample_data_note.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key, required this.tracking, this.goal});
@@ -152,7 +154,7 @@ class _StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
           ),
           if (_summary == null) ...[
             const SizedBox(height: 8),
-            const _SampleDataNote(),
+            const SampleDataNote(),
           ],
           const SizedBox(height: 16),
           SizedBox(
@@ -268,7 +270,7 @@ class _StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
             ),
           ),
           const SizedBox(height: 14),
-          _ReportCard(
+          ReportCard(
             summary: _summary ?? _sampleSummary,
             sample: _summary == null,
             latest: _latest,
@@ -277,207 +279,7 @@ class _StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
             onOpen: _open,
           ),
           const SizedBox(height: 14),
-          _AppBreakdown(summary: _summary),
-        ],
-      ),
-    );
-  }
-}
-
-class _SampleDataNote extends StatelessWidget {
-  const _SampleDataNote();
-
-  @override
-  Widget build(BuildContext context) {
-    final android = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-    return Wrap(
-      spacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        const Chip(
-          label: Text('Sample data'),
-          visualDensity: VisualDensity.compact,
-        ),
-        if (android)
-          const TextButton(
-            onPressed: DeviceUsageService.openUsageAccessSettings,
-            child: Text('Grant usage access'),
-          )
-        else
-          const Text(
-            'Real data needs the Android app.',
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-          ),
-      ],
-    );
-  }
-}
-
-/// "Your report" card: generate, view, or wait for enough data (contracts/stats-ui.md).
-class _ReportCard extends StatelessWidget {
-  const _ReportCard({
-    required this.summary,
-    required this.sample,
-    required this.latest,
-    required this.generating,
-    required this.onGenerate,
-    required this.onOpen,
-  });
-
-  final UsageSummary summary;
-  final bool sample;
-  final BehaviourReport? latest;
-  final bool generating;
-  final VoidCallback onGenerate;
-  final ValueChanged<BehaviourReport> onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = summary;
-    final report = latest;
-    final missing = BehaviourReportService.minDays - s.days;
-    final wait = BehaviourReportService.cooldownLeft(report);
-
-    final String text;
-    Widget? action;
-    if (missing > 0) {
-      text =
-          'Your report needs ${BehaviourReportService.minDays} days of data. '
-          '$missing more ${missing == 1 ? 'day' : 'days'} to go.';
-    } else {
-      text = sample && report == null
-          ? 'Preview the report with sample data. Real reports use your own '
-                'screen time in the Android app.'
-          : report == null
-          ? 'Get patterns, a forecast for next week and tips, based on your '
-                'last ${s.days} days.'
-          : 'Last report: ${report.generatedAt.toLocal().toString().substring(0, 16)}'
-                '${report.sample ? ' (sample data)' : ''}';
-      action = FilledButton(
-        onPressed: generating || wait > Duration.zero ? null : onGenerate,
-        child: generating
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: AppColors.onAccent,
-                ),
-              )
-            : Text(
-                wait > Duration.zero
-                    ? 'Generate again in ${wait.inMinutes + 1} min'
-                    : report == null
-                    ? (sample ? 'Generate sample report' : 'Generate my report')
-                    : 'Generate again',
-              ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.accentDim,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.auto_awesome, color: AppColors.accent),
-              SizedBox(width: 10),
-              Text(
-                'Your report',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(text, style: const TextStyle(height: 1.45)),
-          if (report != null) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () => onOpen(report),
-              child: const Text('View report'),
-            ),
-          ],
-          if (action != null) ...[const SizedBox(height: 8), action],
-        ],
-      ),
-    );
-  }
-}
-
-class _AppBreakdown extends StatelessWidget {
-  const _AppBreakdown({required this.summary});
-  final UsageSummary? summary;
-
-  static const _palette = [
-    AppColors.social,
-    AppColors.screen,
-    AppColors.scroll,
-    AppColors.gym,
-    AppColors.accent,
-    AppColors.textSecondary,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final s = summary;
-    final apps = s == null
-        ? MockData.appBreakdown
-        : [
-            for (var i = 0; i < s.topApps.length; i++)
-              (s.topApps[i].label, s.topApps[i].minPerDay / 60, _palette[i % _palette.length]),
-          ];
-    if (apps.isEmpty) return const SizedBox.shrink();
-    final max = apps.map((a) => a.$2).reduce((a, b) => a > b ? a : b);
-    return AppCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            s == null ? 'Top apps today' : 'Top apps (daily average)',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 16),
-          for (final (name, hours, color) in apps)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 84,
-                    child: Text(
-                      name,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: hours / max,
-                        minHeight: 8,
-                        backgroundColor: AppColors.surfaceHigh,
-                        color: color,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 44,
-                    child: Text(
-                      '${(hours * 60).round()}m',
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          AppBreakdown(summary: _summary),
         ],
       ),
     );

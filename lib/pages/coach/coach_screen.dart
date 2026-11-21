@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../services/groq_coach.dart';
 import '../../theme/app_theme.dart';
-
-class _Message {
-  const _Message(this.text, {required this.fromUser});
-
-  final String text;
-  final bool fromUser;
-}
+import '../../components/chat_bubble.dart';
+import '../../models/chat_message.dart';
 
 /// AI coach chat. Uses Groq when GROQ_API_KEY is set, otherwise canned replies.
 class CoachScreen extends StatefulWidget {
@@ -23,8 +18,8 @@ class CoachScreen extends StatefulWidget {
 class _CoachScreenState extends State<CoachScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
-  late final List<_Message> _messages = [
-    _Message(
+  late final List<ChatMessage> _messages = [
+    ChatMessage(
       "Hey ${widget.name} 👋 I'm your Athar coach. You're 12 days into your "
       'streak and screen time is down 35% this week. What do you want to work on?',
       fromUser: false,
@@ -74,7 +69,7 @@ class _CoachScreenState extends State<CoachScreen> {
     if (trimmed.isEmpty || _typing) return;
     _controller.clear();
     setState(() {
-      _messages.add(_Message(trimmed, fromUser: true));
+      _messages.add(ChatMessage(trimmed, fromUser: true));
       _typing = true;
     });
     _scrollToBottom();
@@ -96,7 +91,7 @@ class _CoachScreenState extends State<CoachScreen> {
     }
     if (!mounted) return;
     setState(() {
-      _messages.add(_Message(reply, fromUser: false));
+      _messages.add(ChatMessage(reply, fromUser: false));
       _typing = false;
     });
     _scrollToBottom();
@@ -158,8 +153,8 @@ class _CoachScreenState extends State<CoachScreen> {
               padding: const EdgeInsets.all(16),
               itemCount: _messages.length + (_typing ? 1 : 0),
               itemBuilder: (context, i) {
-                if (i == _messages.length) return const _Bubble.typing();
-                return _Bubble(message: _messages[i]);
+                if (i == _messages.length) return const ChatBubble.typing();
+                return ChatBubble(message: _messages[i]);
               },
             ),
           ),
@@ -214,48 +209,6 @@ class _CoachScreenState extends State<CoachScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Bubble extends StatelessWidget {
-  const _Bubble({required _Message this.message}) : typing = false;
-  const _Bubble.typing() : message = null, typing = true;
-
-  final _Message? message;
-  final bool typing;
-
-  @override
-  Widget build(BuildContext context) {
-    final fromUser = message?.fromUser ?? false;
-    return Align(
-      alignment: fromUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78,
-        ),
-        decoration: BoxDecoration(
-          color: fromUser ? AppColors.accent : AppColors.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(fromUser ? 18 : 4),
-            bottomRight: Radius.circular(fromUser ? 4 : 18),
-          ),
-          border: fromUser ? null : Border.all(color: AppColors.border),
-        ),
-        child: typing
-            ? const Text('•••', style: TextStyle(color: AppColors.textMuted))
-            : Text(
-                message!.text,
-                style: TextStyle(
-                  height: 1.4,
-                  color: fromUser ? AppColors.onAccent : AppColors.textPrimary,
-                ),
-              ),
       ),
     );
   }
